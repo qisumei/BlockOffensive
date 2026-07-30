@@ -9,7 +9,6 @@ import com.phasetranscrystal.blockoffensive.net.spec.RequestAttachTeammateC2SPac
 import com.phasetranscrystal.fpsmatch.common.client.FPSMClient;
 import com.phasetranscrystal.fpsmatch.common.client.data.FPSMClientGlobalData;
 import com.phasetranscrystal.fpsmatch.common.client.spec.SpectateMode;
-import com.phasetranscrystal.fpsmatch.common.client.spec.SpectateState;
 import com.phasetranscrystal.fpsmatch.core.team.ClientTeam;
 import com.phasetranscrystal.fpsmatch.util.FPSMFormatUtil;
 import java.util.Locale;
@@ -114,7 +113,7 @@ public final class KillCamManager {
 
     private static UUID killerId;
     private static String killerName = "???";
-    private static String gunName = "";
+    private static String gunName = "未知武器";
     private static ItemStack gunStack = ItemStack.EMPTY;
     private static ResourceLocation killerSkin;
 
@@ -147,7 +146,7 @@ public final class KillCamManager {
 
     private static long lastNs = 0L;
 
-    private static String killedByText = "";
+    private static String killedByText = "击杀了你";
     private static String hudText = "";
     private static int hudTextWidth = 0;
 
@@ -213,8 +212,8 @@ public final class KillCamManager {
         gunName = FPSMFormatUtil.i18n(gunStack);
         killerSkin = fetchSkin(killerId, killerName);
 
-        killedByText = I18n.get("blockoffensive.killed_by");
-        hudText = "§c" + killerName + " §7" + I18n.get("blockoffensive.killcam.used") + " §e" + gunName + " §7" + killedByText;
+        killedByText = I18n.exists("blockoffensive.killed_by") ? I18n.get("blockoffensive.killed_by") : "击杀了你";
+        hudText = "§c" + killerName + " §7使用 §e" + gunName + " §7" + killedByText;
 
         Font font = Minecraft.getInstance().font;
         hudTextWidth = font != null ? font.width(hudText) : 0;
@@ -279,13 +278,6 @@ public final class KillCamManager {
         }
 
         boolean isSpec = pl.isSpectator();
-        if (isSpec && phase != Phase.NONE && SpectateState.isRestricted()) {
-            clearKillCamState(false);
-        }
-        if (isSpec && mc.getCameraEntity() != pl && mc.getCameraEntity() != ghostCam && phase != Phase.NONE) {
-            reset();
-            return;
-        }
         if (hudOn) {
             ++hudAlive;
             if (sideResolveCooldown > 0) {
@@ -1124,13 +1116,7 @@ public final class KillCamManager {
     }
 
     private static void reset() {
-        clearKillCamState(true);
-    }
-
-    private static void clearKillCamState(boolean restoreCamera) {
-        if (restoreCamera) {
-            forceRestoreCameraToPlayer();
-        }
+        forceRestoreCameraToPlayer();
         disableGray();
 
         phase = Phase.NONE;
@@ -1146,7 +1132,7 @@ public final class KillCamManager {
 
         killerId = null;
         killerName = "???";
-        gunName = I18n.get("blockoffensive.unknown_weapon");
+        gunName = "未知武器";
         gunStack = ItemStack.EMPTY;
         killerSkin = null;
 
@@ -1154,7 +1140,7 @@ public final class KillCamManager {
         victimSide = Side.UNKNOWN;
         sideResolveCooldown = 0;
 
-        killedByText = I18n.get("blockoffensive.killed_by");
+        killedByText = "击杀了你";
         hudText = "";
         hudTextWidth = 0;
 
