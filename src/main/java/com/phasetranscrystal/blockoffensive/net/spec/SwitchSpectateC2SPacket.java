@@ -47,7 +47,32 @@ public class SwitchSpectateC2SPacket {
             BaseTeam team = mapTeams.getTeamByPlayer(sp.getUUID()).orElse(null);
             if (team == null) return;
 
-            BOSpecManager.switchTeammate(sp, direction);
+            List<ServerPlayer> teammates = team.getPlayerList().stream()
+                    .map(uuid -> sp.server.getPlayerList().getPlayer(uuid))
+                    .filter(p -> p != null && p.isAlive() && !p.isSpectator())
+                    .toList();
+
+            if (teammates.isEmpty()) return;
+
+            int currentIndex = -1;
+            var camera = sp.getCamera();
+            for (int i = 0; i < teammates.size(); i++) {
+                if (teammates.get(i) == camera) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+            if (currentIndex < 0) currentIndex = 0;
+
+            int newIndex = (direction == SwitchDirection.NEXT)
+                    ? (currentIndex + 1) % teammates.size()
+                    : (currentIndex - 1 + teammates.size()) % teammates.size();
+
+            ServerPlayer newCamera = teammates.get(newIndex);
+            if (newCamera != null && newCamera != sp) {
+                sp.setCamera(newCamera);
+                BOSpecManager.markSpecAttach(sp);
+            }
         });
         ctx.setPacketHandled(true);
     }

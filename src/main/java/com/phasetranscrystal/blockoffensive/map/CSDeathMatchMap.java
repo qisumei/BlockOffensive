@@ -8,6 +8,7 @@ import com.phasetranscrystal.fpsmatch.common.capability.map.GameEndTeleportCapab
 import com.phasetranscrystal.fpsmatch.common.capability.team.ShopCapability;
 import com.phasetranscrystal.fpsmatch.common.capability.team.StartKitsCapability;
 import com.phasetranscrystal.fpsmatch.common.capability.team.SpawnPointCapability;
+import com.phasetranscrystal.fpsmatch.core.shop.slot.ShopSlot;
 import com.phasetranscrystal.fpsmatch.common.packet.FPSMatchStatsResetS2CPacket;
 import com.phasetranscrystal.fpsmatch.core.FPSMCore;
 import com.phasetranscrystal.fpsmatch.core.capability.CapabilityMap;
@@ -363,8 +364,16 @@ public class CSDeathMatchMap extends CSMap {
         }
 
         this.getMapTeams().getPlayerData(player).ifPresent(data -> data.setLiving(true));
+        this.clearInventory(player);
         givePlayerKits(player);
-        
+
+        ShopCapability.getPlayerShopData(this, player.getUUID())
+                .ifPresent(shopData -> {
+                    shopData.getData().values().forEach(slots -> slots.forEach(ShopSlot::reset));
+                    shopData.lockShopSlots(player);
+                    ShopCapability.getShopByPlayer(player).ifPresent(shop -> shop.syncShopData(player));
+                });
+
         // 给予重生保护
         getDMPlayerData(player.getUUID()).ifPresent(DMPlayerData::respawn);
     }

@@ -345,6 +345,12 @@ public final class KillCamManager {
                     holdBlack = true;
                     BlockOffensive.INSTANCE.sendToServer(new RequestAttachTeammateC2SPacket());
                     tryLocalAttachToNearestTeammate();
+                    disableGray();
+                    phase = Phase.NONE;
+                    tickIn = 0;
+                    hudOn = false;
+                    hudTick = 0;
+                    hudAlive = 0;
                 }
             }
             default -> {
@@ -354,6 +360,9 @@ public final class KillCamManager {
         if (isSpec) {
             Entity camEnt = mc.getCameraEntity();
             if (camEnt != null && camEnt != pl && camEnt != ghostCam) {
+                if (phase == Phase.NONE && camEnt instanceof Player p && p.isAlive() && !p.isSpectator()) {
+                    return;
+                }
                 resetForLifecycleBoundary();
             }
         }
